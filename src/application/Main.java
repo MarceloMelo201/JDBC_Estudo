@@ -3,37 +3,42 @@ package application;
 import db.DB;
 import db.DbException;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 public class Main {
     public static void main(String[] args) {
-
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
 
         Connection conn; //Conecta com o banco
-        Statement st = null; //Prepara a consulta SQL
-        ResultSet rs = null; //Onde o resultado da consulta fica guardado
+        PreparedStatement st = null;
 
         try{
             conn = DB.getConnection();
-            st = conn.createStatement();
-            rs = st.executeQuery("select * from department");
 
-            while(rs.next()){
-                System.out.println(rs.getInt("Id") + ", " + rs.getString("Name"));
-            }
-        }
-        catch (SQLException e){
+            st = conn.prepareStatement(
+                        "INSERT INTO seller "
+                            + "(Name, Email, BirthDate, BaseSalary, DepartmentId) "
+                            + "VALUES "
+                            + "(?, ?, ?, ?, ?)");
+
+            st.setString(1, "Carl Purple");
+            st.setString(2, "carl@gmail.com");
+            st.setDate(3, new Date(sdf.parse("22/04/1985").getTime()));
+            st.setDouble(4, 3000.0);
+            st.setInt(5, 4);
+
+            int rowsAffected = st.executeUpdate();
+            System.out.println("Done! Rows affected: "+rowsAffected);
+        } catch (SQLException e){
             throw new DbException(e.getMessage());
-        }
-        finally {
-            DB.closeResultSet(rs);
+        } catch (ParseException e){
+            e.printStackTrace();
+        } finally {
             DB.closeStatement(st);
             DB.closeConnection();
         }
-
 
     }
 }
